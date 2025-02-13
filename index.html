@@ -525,39 +525,34 @@
     <section id="gallery">
       <h2>Gallery</h2>
             <!-- New Gallery Row for Text Prompt -->
-            <div class="gallery-row text-prompt">
-              <div class="gallery-item" style="grid-column: span 2; text-align: left;">
-                <h3>Text Prompt</h3>
-                <p>A dreamy, ethereal painting of a hidden forest glade bathed in golden sunlight. Soft beams of light filter through tall, ancient trees. Vibrant wildflowers bloom across mossy stones. Gentle mist drifts along the ground, giving a surreal, mystical atmosphere. Painted in the style of a romantic watercolor illustration, with delicate brushstrokes and luminous color highlights.</p>
-              </div>
-            </div>
-            
-            <div class="gallery-row">
-              <div class="gallery-item">
-                  <img src="{{ url_for('static', filename='temp/temp_input_378e513183774ecf84aad57d981a2726.jpg') }}" alt="Dog">
-              </div>
-              <div class="gallery-item">
-                  <img src="{{ url_for('static', filename='outputs/f6b3c06f9c08495c9c6c0eb3918cadb5_output.png') }}" alt="Dog">
-              </div>
-          </div>
-          <div class="gallery-row">
-              <div class="gallery-item">
-                  <img src="{{ url_for('static', filename='temp/temp_input_c4efd02f19fb4ce78de4684ba26b7bb8.jpg') }}" alt="Potted Plant">
-              </div>
-              <div class="gallery-item">
-                  <img src="{{ url_for('static', filename='outputs/2a913e39b36543dc8009da9aca476aec_output.png') }}" alt="Potted Plant">
-              </div>
-          </div>
-          <div class="gallery-row">
-              <div class="gallery-item">
-                  <img src="{{ url_for('static', filename='temp/temp_input_9a7fe32d65834f8fbcfaae96ccad851f.jpg') }}" alt="Person">
-                  <p>Original</p>
-              </div>
-              <div class="gallery-item">
-                  <img src="{{ url_for('static', filename='outputs/319a42514b89498ea9851e1bc98969e0_output.png') }}" alt="Person">
-                  <p>Processed</p>
-              </div>
-          </div>
+           <div class="gallery-row">
+    <div class="gallery-item">
+      <img src="static/temp/temp_input_378e513183774ecf84aad57d981a2726.jpg" alt="Dog">
+    </div>
+    <div class="gallery-item">
+      <img src="static/outputs/f6b3c06f9c08495c9c6c0eb3918cadb5_output.png" alt="Dog">
+    </div>
+  </div>
+
+  <div class="gallery-row">
+    <div class="gallery-item">
+      <img src="static/temp/temp_input_c4efd02f19fb4ce78de4684ba26b7bb8.jpg" alt="Potted Plant">
+    </div>
+    <div class="gallery-item">
+      <img src="static/outputs/2a913e39b36543dc8009da9aca476aec_output.png" alt="Potted Plant">
+    </div>
+  </div>
+
+  <div class="gallery-row">
+    <div class="gallery-item">
+      <img src="static/temp/temp_input_9a7fe32d65834f8fbcfaae96ccad851f.jpg" alt="Person">
+      <p>Original</p>
+    </div>
+    <div class="gallery-item">
+      <img src="static/outputs/319a42514b89498ea9851e1bc98969e0_output.png" alt="Person">
+      <p>Processed</p>
+    </div>
+  </div>
     </section>
 
     <!-- CONTACT / CTA SECTION -->
