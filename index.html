@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Smart AI Displayer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&family=Open+Sans:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+  <!-- Font Awesome for Social Media Icons (needed for GitHub icon button) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+  <style>
+    /* Reset & Base Styles */
+    *, *::before, *::after {
+      margin: 0; 
+      padding: 0; 
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Montserrat', 'Open Sans', sans-serif;
+      /* 使用透明纹理作为背景图案 */
+      background: #fafafa url('https://www.transparenttextures.com/patterns/cubes.png');
+      background-size: auto;
+      color: #333;
+      display: flex;
+      min-height: 100vh;
+      line-height: 1.6;
+      animation: fadeIn 1s ease-in-out;
+    }
+    img {
+      max-width: 100%;
+      display: block;
+    }
+    a {
+      text-decoration: none;
+      color: inherit;
+      transition: color 0.3s ease;
+    }
+    a:hover {
+      color: #6bc1ff;
+    }
+    h1, h2, h3 {
+      margin-bottom: 0.5em;
+      line-height: 1.2;
+    }
+    p {
+      margin-bottom: 1em;
+    }
+    /* Fade In 动画 */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    /* Sidebar Navigation */
+    nav {
+      width: 250px;
+      background: #262a33;
+      color: #fff;
+      position: sticky;
+      top: 0;
+      align-self: flex-start;
+      height: 100vh;
+      padding: 2rem 1rem;
+      animation: fadeIn 1s ease-in-out;
+    }
+    nav h2 {
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+      font-weight: 600;
+    }
+    nav ul {
+      list-style: none;
+      padding-left: 0;
+      margin-top: 1.5rem;
+    }
+    nav li {
+      margin-bottom: 1rem;
+    }
+    nav li a {
+      color: #fff;
+      font-weight: 500;
+      display: inline-block;
+      padding: 0.3rem 0;
+    }
+    nav li a:hover {
+      color: #9ea3a9;
+    }
+    /* Main Content Area */
+    main {
+      flex: 1;
+      padding: 2rem;
+      animation: fadeIn 1s ease-in-out;
+    }
+    /* Hero Section */
+    .hero {
+      background: linear-gradient(135deg, #6bc1ff, #72ffe4);
+      padding: 2rem;
+      border-radius: 10px;
+      margin-bottom: 2rem;
+      text-align: center;
+      color: #0a0a0a;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      animation: fadeIn 1s ease-in-out;
+    }
+    .hero h1 {
+      font-size: 2.8rem;
+      margin-bottom: 1rem;
+      color: #0a0a0a;
+    }
+    .hero p {
+      font-size: 1.1rem;
+    }
+    .hero button {
+      background: #0a0a0a;
+      color: #fff;
+      border: none;
+      padding: 0.8rem 1.5rem;
+      font-size: 1rem;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background 0.3s ease, transform 0.3s ease;
+    }
+    .hero button:hover {
+      background: #414141;
+      transform: scale(1.05);
+    }
+    /* Self Potential Section */
+    #self-potential {
+      background: #f9f9f9;
+      padding: 2rem;
+      border-radius: 10px;
+      margin-bottom: 2rem;
+      text-align: center;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+      animation: fadeIn 1s ease-in-out;
+    }
+    #self-potential h2 {
+      font-size: 1.8rem;
+      margin-bottom: 1rem;
+    }
+    #self-potential ul {
+      list-style-type: none;
+      padding-left: 0;
+      text-align: left;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    #self-potential li {
+      margin-bottom: 1rem;
+      line-height: 1.5;
+      font-size: 1rem;
+      color: #555;
+    }
+    /* Features Section */
+    section#features {
+      margin-bottom: 2rem;
+      animation: fadeIn 1s ease-in-out;
+    }
+    #features h2 {
+      font-size: 1.8rem;
+      margin-bottom: 1rem;
+    }
+    .features-container {
+      overflow-x: auto;
+    }
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.5rem;
+      margin-top: 1rem;
+    }
+    .feature-card {
+      background: #fff;
+      border-radius: 6px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+      padding: 1.5rem;
+      cursor: pointer;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .feature-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+    .feature-card h3 {
+      margin-bottom: 0.5rem;
+      font-size: 1.2rem;
+      color: #333;
+    }
+    /* Feature Details Section */
+    #feature-details { 
+      background: #fff; 
+      padding: 1.5rem; 
+      border-radius: 6px; 
+      box-shadow: 0 1px 4px rgba(0,0,0,0.1); 
+      margin-top: 1.5rem; 
+      margin-bottom: 1.5rem;
+      display: none;
+      animation: fadeIn 0.5s ease-in-out;
+    }
+    #feature-details h3 { 
+      font-size: 1.5rem; 
+      margin-bottom: 0.5rem; 
+    }
+    /* Demo / Video Section */
+    section#demo {
+      background: #f0f9ff;
+      padding: 2rem;
+      border-radius: 10px;
+      margin-bottom: 2rem;
+      animation: fadeIn 1s ease-in-out;
+    }
+    #demo h2 {
+      font-size: 1.8rem;
+      margin-bottom: 1rem;
+    }
+    #demo iframe {
+      width: 100%;
+      max-width: 700px;
+      height: 400px;
+      border: none;
+      border-radius: 8px;
+      display: block;
+      margin: 1rem auto;
+    }
+    /* Gallery Section */
+    section#gallery {
+      
+      overflow-y: auto;
+      background: #fff;
+      padding: 2rem;
+      border-radius: 10px;
+      margin-bottom: 2rem;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+      animation: fadeIn 1s ease-in-out;
+      cursor: pointer;
+      transition: all 0.3s ease-in-out; /* 平滑切换 */
+    }
+    section#gallery h2 {
+      font-size: 1.8rem;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+    
+
+    section#gallery.fullscreen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(255, 255, 255, 0.98);
+      z-index: 1000;
+      padding: 3rem;
+      overflow-y: auto;
+    }
+
+    section#gallery:not(.fullscreen) {
+      max-height: 70vh;
+    }
+    .gallery-row {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .gallery-item {
+      text-align: center;
+    }
+    .gallery-item img {
+      height: 100%;
+      border-radius: 6px;
+      transition: transform 0.3s ease;
+      margin-bottom: 0.5rem; /* Added space so text is not covered */
+    }
+    .gallery-item img:hover {
+      transform: scale(1.05);
+    }
+    .gallery-item p {
+      margin-top: 0.5rem;
+      font-size: 1rem;
+      color: #555;
+    }
+    /* Additional Gallery Row for Text Prompt */
+    .gallery-row.text-prompt {
+      grid-template-columns: 1fr;
+    }
+    .gallery-row.text-prompt .gallery-item {
+      text-align: left;
+    }
+    .gallery-row.text-prompt .gallery-item h3 {
+      margin-bottom: 0.5rem;
+      font-size: 1.4rem;
+      color: #333;
+    }
+    .gallery-row.text-prompt .gallery-item p {
+      font-size: 1rem;
+      color: #555;
+    }
+    /* CTA / Contact Section */
+    section#contact {
+      background: #fff;
+      padding: 2rem;
+      border-radius: 10px;
+      margin-bottom: 2rem;
+      text-align: center;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+      animation: fadeIn 1s ease-in-out;
+    }
+    #contact h2 {
+      font-size: 1.8rem;
+      margin-bottom: 0.5rem;
+    }
+    #contact button {
+      margin-top: 1rem;
+      background: #1c1c1c;
+      color: #fff;
+      border: none;
+      padding: 0.8rem 1.3rem;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: background 0.3s ease, transform 0.3s ease;
+    }
+    #contact button:hover {
+      background: #444444;
+      transform: scale(1.05);
+    }
+
+    /* Popup for Early Career Information */
+    .popup {
+      display: none; /* Initially hidden */
+      position: fixed;
+      top: 0;
+      left: 0;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%); /* 让窗口中心对齐屏幕中心 */
+      width: 50vw; /* 适当设置宽度 */
+      max-width: 4000px; /* 避免窗口过宽 */
+      
+      background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+      z-index: 1000;
+    }
+    
+    .popup-content {
+      max-height: 80vh;
+      background-color: white;
+      margin: 15% auto;
+      padding: 20px;
+      border-radius: 8px;
+      width: 50%;
+      max-width: 2000px;
+    }
+    
+    .close-btn {
+      color: #aaa;
+      font-size: 28px;
+      font-weight: bold;
+      position: absolute;
+      top: 10px;
+      right: 25px;
+    }
+    
+    .close-btn:hover,
+    .close-btn:focus {
+      color: black;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    /* Feedback Section */
+    section#feedback {
+      background: #eef7ff;
+      padding: 2rem;
+      border-radius: 10px;
+      margin-bottom: 2rem;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+      animation: fadeIn 1s ease-in-out;
+    }
+    #feedback h2 {
+      font-size: 1.8rem;
+      margin-bottom: 1rem;
+    }
+    #feedback form {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    #feedback input, 
+    #feedback textarea {
+      padding: 0.8rem;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 1rem;
+      width: 100%;
+    }
+    #feedback button {
+      background: #1c1c1c;
+      color: #fff;
+      border: none;
+      padding: 0.8rem;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: background 0.3s ease, transform 0.3s ease;
+    }
+    #feedback button:hover {
+      background: #444444;
+      transform: scale(1.05);
+    }
+    /* Footer */
+    footer {
+      text-align: center;
+      padding: 1rem;
+      color: #888;
+      font-size: 0.9rem;
+      animation: fadeIn 1s ease-in-out;
+    }
+    footer p {
+      margin: 0.4rem 0;
+    }
+    /* Removed Social Links */
+    /* Responsive Tweaks */
+    @media (max-width: 768px) {
+      nav {
+        position: static;
+        width: 100%;
+        height: auto;
+      }
+      nav ul {
+        display: flex;
+        flex-wrap: wrap;
+        margin-top: 1rem;
+      }
+      nav li {
+        margin-right: 1rem;
+      }
+      body {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- SIDEBAR NAVIGATION -->
+  <nav>
+    <h2>Smart AI Displayer😟</h2>
+    <ul>
+      <li><a href="#hero">Home</a></li>
+      <li><a href="#features">Features</a></li>
+      <li><a href="#demo">Demo</a></li>
+      <li><a href="#gallery">Gallery</a></li>
+      <li><a href="#contact">Contact</a></li>
+      <li><a href="#feedback">Feedback</a></li>
+    </ul>
+  </nav>
+
+  <!-- MAIN CONTENT -->
+  <main>
+    <!-- HERO SECTION -->
+    <section class="hero" id="hero">
+      <h1>Smart AI Displayer</h1>
+      <p> SAD is designed to generate and display AI processed images on a Raspberry Pi-connected LED screen based on deteced object image, text prompt, real-time temperature and humidity readings.</p>
+      <!-- GitHub Icon Button replacing "Learn More" -->
+      <button onclick="window.open('https://github.com/SaxonShang/LUGUAN', '_blank');" aria-label="GitHub">
+        <i class="fab fa-github" style="font-size: 1.2rem;"></i>
+      </button>
+    </section>
+
+    <!-- SELF POTENTIAL SECTION -->
+    <section id="self-potential">
+      <h2>Imaginative Masterpiece at Home</h2>
+      <ul style="list-style: none; padding-left: 0;">
+        <li>
+          <strong>Interaction with the World:</strong> Our system integrates a real-time video camera and sensor that continuously capture the dynamic environment around you.<br>
+        </li>
+        <li>
+          <strong>No More Static Displays:</strong> Banish the boredom of an unchanging picture—your display is refreshed continuously, reflecting the ever-evolving world at your doorstep.<br>
+        </li>
+        <li>
+          <strong>Daily Art Creation:</strong> Transform your daily thoughts and emotions into art. Let your creative expressions turn your living space into an ever-changing masterpiece.<br>
+        </li>
+      </ul>
+    </section>
+
+    <!-- FEATURES SECTION -->
+    <section id="features">
+      <h2>Key Features</h2>
+      <div class="features-container">
+        <div class="features-grid">
+          <div class="feature-card" onclick="showFeatureDetail('Found. No escape.', 'Automatic Object Detection')">
+            <h3>Found. No escape.</h3>
+          </div>
+          <div class="feature-card" onclick="showFeatureDetail('The Exchange', 'Firebase Integration')">
+            <h3>The Exchange</h3>
+          </div>
+          <div class="feature-card" onclick="showFeatureDetail('The Processing Chamber', 'AI Processing Server')">
+            <h3>The Processing Chamber</h3>
+          </div>
+          <div class="feature-card" onclick="showFeatureDetail('The Warden', 'Environmental Monitoring')">
+            <h3>The Warden.</h3>
+          </div>
+        </div>
+      </div>
+    </section>
+    
+    <!-- FEATURE DETAILS SECTION -->
+    <section id="feature-details"> 
+      <h3 id="detail-title">Feature Title</h3>
+      <p id="detail-description">Feature description will appear here.</p>
+      <ul id="feature-list">
+        <!-- Detailed information will be loaded dynamically -->
+      </ul>
+    </section>
+
+    <!-- DEMO / VIDEO SECTION -->
+    <section id="demo">
+      <h2>Watch It in Action</h2>
+      <p>Check out a quick demo showcasing how the system detects objects and processes images live.</p>
+      <iframe width="560" height="315" src="https://www.youtube.com/embed/4RJMHCN5EvA" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    </section>
+
+    <!-- GALLERY SECTION -->
+    <section id="gallery">
+      <h2>Gallery</h2>
+            <!-- New Gallery Row for Text Prompt -->
+            <div class="gallery-row text-prompt">
+              <div class="gallery-item" style="grid-column: span 2; text-align: left;">
+                <h3>Text Prompt</h3>
+                <p>A dreamy, ethereal painting of a hidden forest glade bathed in golden sunlight. Soft beams of light filter through tall, ancient trees. Vibrant wildflowers bloom across mossy stones. Gentle mist drifts along the ground, giving a surreal, mystical atmosphere. Painted in the style of a romantic watercolor illustration, with delicate brushstrokes and luminous color highlights.</p>
+              </div>
+            </div>
+            
+            <div class="gallery-row">
+              <div class="gallery-item">
+                  <img src="{{ url_for('static', filename='temp/temp_input_378e513183774ecf84aad57d981a2726.jpg') }}" alt="Dog">
+              </div>
+              <div class="gallery-item">
+                  <img src="{{ url_for('static', filename='outputs/f6b3c06f9c08495c9c6c0eb3918cadb5_output.png') }}" alt="Dog">
+              </div>
+          </div>
+          <div class="gallery-row">
+              <div class="gallery-item">
+                  <img src="{{ url_for('static', filename='temp/temp_input_c4efd02f19fb4ce78de4684ba26b7bb8.jpg') }}" alt="Potted Plant">
+              </div>
+              <div class="gallery-item">
+                  <img src="{{ url_for('static', filename='outputs/2a913e39b36543dc8009da9aca476aec_output.png') }}" alt="Potted Plant">
+              </div>
+          </div>
+          <div class="gallery-row">
+              <div class="gallery-item">
+                  <img src="{{ url_for('static', filename='temp/temp_input_9a7fe32d65834f8fbcfaae96ccad851f.jpg') }}" alt="Person">
+                  <p>Original</p>
+              </div>
+              <div class="gallery-item">
+                  <img src="{{ url_for('static', filename='outputs/319a42514b89498ea9851e1bc98969e0_output.png') }}" alt="Person">
+                  <p>Processed</p>
+              </div>
+          </div>
+    </section>
+
+    <!-- CONTACT / CTA SECTION -->
+    <section id="contact">
+      <h2>Get in Touch</h2>
+      <p>Have questions or want to discuss partnership opportunities? We’d love to hear from you!</p>
+      <button onclick="window.location.href='mailto:info@luguantech.freeqiye.com'">Contact Us</button>
+      <button onclick="openJobPopup()">Early Career Opportunities</button>
+    </section>
+
+    <!-- Popup for Early Career Information -->
+    <div id="jobPopup" class="popup" style="display:none;">
+      <div class="popup-content" style="max-height: 80vh; overflow-y: auto;">
+        <span class="close-btn" onclick="closeJobPopup()">&times;</span>
+        <h3>Early Career Opportunities</h3>
+        <p>We are currently looking for passionate individuals to join our team. Here is an exciting opportunity:</p>
+        
+        <h4>2025 Summer Internship - Software Engineer (Luguangroup)</h4>
+    
+        <h5>About this role</h5>
+        <p>Hey Future Innovators! 🌟 Ready to dive into a world where dreaming big is the norm? At Luguangroup, we're all about being visionary, strategic, and totally open to innovation. 🚀 Get ready to build great things as we work in service of our users, constantly pushing higher and aiming for greatness. 💪 Taking ownership is our jam – make bold decisions, take action, and own it!</p>
+    
+        <p>And guess what? We win like a sports team! 🏆 Trust, collaboration, and empowerment are the rules of the game. 🤝 Ready to learn and grow at warp speed? We're all in for that too – never stop learning and iterate fast. 💡</p>
+    
+        <p>Ready to be part of this? Join our 2025 Summer Internship Program 🌞 and elevate your skills, connect with bright minds, and be a part of something big. But here's the secret sauce: share our passion! 🌈 Share ideas, bring enthusiasm, and embrace the joy of creating something awesome together. 🎉</p>
+    
+        <h5>Our Values:</h5>
+        <ul>
+          <li><strong>Dream big</strong> — Be visionary, strategic, and open to innovation</li>
+          <li><strong>Build great things</strong> — Work in service of our users, always improving and pushing higher</li>
+          <li><strong>Take ownership</strong> — Take responsibility with bold decision-making and bias for action</li>
+          <li><strong>Win like a sports team</strong> — Be trusting and collaborative while empowering others</li>
+          <li><strong>Learn and grow fast</strong> — Never stop learning and iterate fast</li>
+          <li><strong>Share our passion</strong> — Share ideas and practice enthusiasm and joy</li>
+          <li><strong>Be user obsessed</strong> — Empathetic, inquisitive, practical</li>
+        </ul>
+    
+        <h5>Internship start date:</h5>
+        <p>27 May 2025 (Tuesday) or 24 June 2025 (Tuesday)</p>
+    
+        <h5>About the team:</h5>
+        <p>After our huge success with handwriting recognition in multiple languages, we are accelerating the research and development of cutting-edge features leveraging AI to create the best learning and note-taking platform. You will be part of the cross-functional engineering team, turning state-of-the-art research into a real product that impacts the lives of millions of users.</p>
+        <p>They’re a very international team, with your future coworkers being based in 6 different countries across Europe and Asia. However, due to the asynchronous nature of working that Luguangroup has adopted, any time difference will not impact your work-life balance. During the natural overlap of hours within the team, you will collaborate with designers, ML and software engineers, and QAs to review any blockers.</p>
+    
+        <h5>You will:</h5>
+        <ul>
+          <li>Develop, scale, and maintain machine learning applications to enhance the experience of millions of our users.</li>
+          <li>Fine-tune LLM Models to create innovative AI-first user interfaces in Luguangroup.</li>
+          <li>Collaborate closely with a multidisciplinary team, including engineers, QA, and product designers, in a fast-paced environment to deliver features rapidly.</li>
+          <li>Share knowledge, promote standard methodologies, and collaborate with cross-functional teams.</li>
+        </ul>
+    
+        <h5>What you need to be successful:</h5>
+        <ul>
+          <li>Penultimate or final year student in a related field</li>
+          <li>Passionate in machine learning. A bonus if you love productivity or education!</li>
+          <li>Solid fundamentals of computer science and good problem-solving skills.</li>
+          <li>Experience with machine learning frameworks such as TensorFlow or PyTorch.</li>
+          <li>Proficiency in Python and at least one of the following programming languages: Java, Kotlin, Swift, or C++.</li>
+          <li>Able to communicate clearly about your work and proactively reach out when you need help.</li>
+        </ul>
+    
+        <h5>Interview Process:</h5>
+        <ul>
+          <li><strong>Take-home Assignment:</strong> A timed online coding skills test.</li>
+          <li><strong>Introduction:</strong> The Talent Team wants to hear more about your background, what you are looking for, and why you’d like to join Luguangroup.</li>
+          <li><strong>Live coding & Technical interview:</strong> A live coding call with one of our engineers. This is where you get to see what it would be like working at Luguangroup as well as the chance to ask any engineering questions you may have.</li>
+          <li><strong>Hiring Manager interview:</strong> A call with your hiring manager. This is the person who will be managing you day to day, working on your growth and development with you as well as supporting you throughout your internship at Luguangroup.</li>
+          <li><strong>Values interview:</strong> Meeting with members of the Luguangroup Team to answer questions relating to "take ownership" AND "build great things".</li>
+        </ul>
+    
+        <h5>Apply Now!</h5>
+        <p>You'll receive a chance to make a significant contribution to a product people already love.</p>
+        <p>Our internships are only available for in-office positions but we’ll cover food and transportation.</p>
+        <p>The internship will be for May/June 2025 and last 12 weeks.</p>
+      </div>
+    </div>
+    
+
+    <!-- FEEDBACK SECTION -->
+    <section id="feedback">
+      <h2>Your Feedback</h2>
+      <p>We value your thoughts. Please let us know how we can improve our services.</p>
+      <form id="feedback-form">
+        <input type="text" id="name" name="name" placeholder="Your Name" required />
+        <input type="email" id="email" name="email" placeholder="Your Email" required />
+        <textarea id="message" name="message" rows="4" placeholder="Your Feedback" required></textarea>
+        <button type="submit">Submit Feedback</button>
+      </form>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+      <p>© 2025 Smart AI Displayer😟. All rights reserved.</p>
+      <p>Built with ♥ by luguan group</p>
+    </footer>
+  </main>
+  <script>
+    document.getElementById("gallery").addEventListener("click", function () {
+      this.classList.toggle("fullscreen");
+    });
+  </script>
+  <script>
+    function showFeatureDetail(title, category) {
+      // Show the feature details section
+      document.getElementById('feature-details').style.display = 'block';
+      document.getElementById('detail-title').innerText = title;
+      
+      // Feature details mapping
+      const featureDetails = {
+        'Automatic Object Detection': [
+          'YOLOv5 detects 80 object categories, spanning everyday and specialized targets.',
+          'The model achieves a 0.783 mAP@0.5 across 80 classes, with exceptional accuracy for distinct-shaped objects (e.g., horse: 0.926 AP, aeroplane: 0.900 AP).',
+          'Optimized for real-time processing, it ensures high-speed detection (>30 FPS) and low false negatives (e.g., person: 0.847 AP, car: 0.873 AP) even in dynamic environments.',
+          'Challenges persist for classes like pottedplant (0.492 AP) due to occlusions or shape variability, requiring targeted data augmentation.',
+          'Our system uses YOLOv5 for instant object recognition, capturing targets (e.g., persons) immediately upon entering the camera’s field of view.',
+          'The pipeline prioritizes speed and accuracy, minimizing missed detections while maintaining precision in challenging lighting or motion scenarios.'
+        ],
+        'Firebase Integration': [
+          'We integrate seamlessly with Firebase for real-time image uploading and history management. Every captured image is automatically stored in the cloud under a unique timestamp, ensuring a complete record of all events. This makes it easy to review past captures or analyze trends over time.',
+          'Our robust Firebase backend provides instant synchronization and reliable data retrieval. The system automatically updates the history dropdown with each new upload, enabling effortless access to any previously captured image.',
+          'With Firebase Realtime Databases 1GB storage limit, we can store approximately 17,868 images (640×480 in Base64 format). The daily download limit of 360MB allows us to retrieve up to 6,283 images per day. To handle larger datasets, periodic data cleanup or switching to Firebase Storage is recommended for better scalability and efficiency.'
+        ],
+        'AI Processing Server': [ 
+          'Our backend AI processing chamber transforms inputs into stunning generative images. With four models available, you can choose the best fit for your creative needs, from subtle enhancements to dramatic transformations. The AI server rapidly processes images using advanced generative algorithms, turning captured frames, text prompts, and sensor readings into visually captivating outputs, suitable for art and commercial design.',
+          'Multi-Model Support involves stable diffusion V1.5/V2.1（Standard generation for balanced realism）,dreamlike_photoreal_2（Dreamlike, imaginative aesthetics）and openjourney_local（Focuses on creative, artful outputs）.',
+          'The system adapts to environmental changes using three methods: Prompt Modification (Adds contextual cues based on real-time sensor data),Seed Generation (Uses sensor values to hash-determine unique seeds for output consistency) and Parameter Mapping (Maps temperature to strength and humidity to guidance_scale for balanced realism and creativity).'
+        ],
+        'Environmental Monitoring': [
+          'Equipped with high-precision Si7021 I2C sensors on the Raspberry Pi Zero, our system continuously monitors temperature (±0.3°C accuracy, -10°C to 85°C range) and humidity (±2% RH accuracy, 10% - 90% RH range), with resolutions of 0.01°C and 0.01% RH and long-term drift under 0.25% RH/year.',
+          'This environmental data dynamically adjusts image processing parameters to maintain consistent outputs under varying conditions. The sensor’s stability minimizes temperature/humidity impacts, ensuring reliable performance in indoor or controlled outdoor environments.',
+          'The integration of real-time environmental feedback enhances system adaptability, making it ideal for applications where precise environmental compensation is critical to accuracy.'
+        ]
+      };
+    
+      // Map titles to feature categories
+      const titleToCategoryMap = {
+        'Found. No escape.': 'Automatic Object Detection',
+        'The Exchange': 'Firebase Integration',
+        'The Processing Chamber': 'AI Processing Server',
+        'The Warden': 'Environmental Monitoring'
+      };
+    
+      const detailsKey = titleToCategoryMap[title];
+      const details = featureDetails[detailsKey] || [];
+    
+      // Create the HTML for the details
+      let combinedDetails = '';
+      details.forEach(function(detail) {
+        if (detail.includes('sd_v1_5/sd_2_1') || detail.includes('dreamlike_photoreal_2') || detail.includes('openjourney_local') || detail.includes('Input Flexibility') || 
+            detail.includes('The system adapts to environmental changes using three methods:') || 
+            detail.includes('Prompt Modification: Adds contextual cues') || 
+            detail.includes('Seed Generation: Uses sensor values')) {
+          // For these specific lines, render them without bullet points
+          combinedDetails += `<p>${detail}</p>`;
+        } else {
+          // For other lines, use bullet points
+          combinedDetails += `<li>${detail}</li>`;
+        }
+      });
+    
+      // Display the details in the description section
+      document.getElementById('detail-description').innerHTML = `<ul>${combinedDetails}</ul>`;
+      
+      // Clear the previous feature details list (if any)
+      const featureList = document.getElementById('feature-list');
+      featureList.innerHTML = '';
+    }
+    
+    
+    
+    // Feedback form submission handling
+    document.getElementById('feedback-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      alert('Thank you for your feedback!');
+      this.reset();
+    });
+
+
+    
+      function openJobPopup() {
+        document.getElementById('jobPopup').style.display = 'block';
+      }
+    
+      function closeJobPopup() {
+        document.getElementById('jobPopup').style.display = 'none';
+      }
+    
+      window.onclick = function(event) {
+        if (event.target === document.getElementById('jobPopup')) {
+          closeJobPopup();
+        }
+      };
+    </script>
+  
+</body>
+</html>
