@@ -1,191 +1,180 @@
 import os
+import json
 import threading
 import time
-import json
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, Response
 import smbus2
 
-# Config from environment
-I2C_BUS = int(os.getenv('I2C_BUS', '1'))
-I2C_ADDRESS = int(os.getenv('I2C_ADDRESS', '0x18'), 16)
-SERVER_HOST = os.getenv('SERVER_HOST', '0.0.0.0')
-SERVER_PORT = int(os.getenv('SERVER_PORT', '8080'))
-SAMPLE_INTERVAL_MS = int(os.getenv('SAMPLE_INTERVAL_MS', '1000'))
+# Environment variables for configuration
+I2C_BUS_ID = int(os.environ.get('I2C_BUS_ID', '1'))
+I2C_ADDRESS = int(os.environ.get('I2C_ADDRESS', '0x18'), 16)
+HTTP_HOST = os.environ.get('HTTP_HOST', '0.0.0.0')
+HTTP_PORT = int(os.environ.get('HTTP_PORT', '8080'))
+SAMPLING_INTERVAL_MS = int(os.environ.get('SAMPLING_INTERVAL_MS', '1000'))
 
-# MCP9808 Register Addresses
-REG_TEMP = 0x05
+# MCP9808 Register addresses
+REG_AMBIENT_TEMP = 0x05
 REG_CONFIG = 0x01
-REG_ALERT_UPPER = 0x02
-REG_ALERT_LOWER = 0x03
-REG_ALERT_CRIT = 0x04
+REG_UPPER_TEMP = 0x02
+REG_LOWER_TEMP = 0x03
+REG_CRIT_TEMP = 0x04
 REG_MANUF_ID = 0x06
 REG_DEVICE_ID = 0x07
 REG_RESOLUTION = 0x08
 
-# Alert config bits
-ALERT_CONFIG_BITS = {
-    "alert_mode": 0x0001,      # Alert mode bit
-    "alert_polarity": 0x0002,  # Alert polarity bit
-    "alert_select": 0x0004,    # Alert select bit
-    "alert_enable": 0x0008     # Alert enable bit
-}
+# Default Alert Output config (0x0000: all alert-disabled)
+DEFAULT_ALERT_CONFIG = 0x0000
 
-bus = smbus2.SMBus(I2C_BUS)
+# Global state
+sampling_interval_ms = SAMPLING_INTERVAL_MS
+current_i2c_address = I2C_ADDRESS
+alert_config = DEFAULT_ALERT_CONFIG
+temp_log = []
+temp_log_lock = threading.Lock()
+MAX_LOG_LENGTH = 1000
+
 app = Flask(__name__)
 
-# Shared state for sampling
-_last_temp_reading = None
-_last_temp_timestamp = 0
-_sampling_interval = SAMPLE_INTERVAL_MS  # milliseconds
-_lock = threading.Lock()
+def read_word(bus, addr, reg):
+    # Read a 16-bit word and swap bytes
+    raw = bus.read_word_data(addr, reg)
+    return ((raw << 8) & 0xFF00) | (raw >> 8)
 
-def read_temperature():
-    # Read 2 bytes from temperature register
-    try:
-        data = bus.read_i2c_block_data(I2C_ADDRESS, REG_TEMP, 2)
-        t_upper = data[0]
-        t_lower = data[1]
-        temp = ((t_upper & 0x1F) << 8) | t_lower
-        if t_upper & 0x10:  # sign bit
-            temp -= 8192
-        temperature = temp * 0.0625
-        return round(temperature, 4)
-    except Exception as e:
-        return None
+def read_temperature(bus, addr):
+    # Returns temperature in Celsius
+    raw = read_word(bus, addr, REG_AMBIENT_TEMP)
+    temp = raw & 0x0FFF
+    temp /= 16.0
+    if raw & 0x1000:
+        temp -= 256.0
+    return round(temp, 4)
 
-def read_alert_status():
-    try:
-        # Read config register for alert info
-        config = bus.read_word_data(I2C_ADDRESS, REG_CONFIG)
-        # Endianness swap
-        config = ((config << 8) & 0xFF00) | ((config >> 8) & 0x00FF)
-        alert_enabled = bool(config & ALERT_CONFIG_BITS["alert_enable"])
-        # Check if alert is asserted (A pin), using upper/lower/crit
-        temp = read_temperature()
-        upper = get_threshold(REG_ALERT_UPPER)
-        lower = get_threshold(REG_ALERT_LOWER)
-        crit = get_threshold(REG_ALERT_CRIT)
-        alert_status = {
-            "enabled": alert_enabled,
-            "exceeded_upper": temp is not None and temp > upper,
-            "below_lower": temp is not None and temp < lower,
-            "exceeded_critical": temp is not None and temp > crit
-        }
-        return alert_status
-    except Exception as e:
-        return {"error": "Unable to read alert status"}
+def read_alert_status(bus, addr):
+    conf = read_word(bus, addr, REG_CONFIG)
+    # Bits 2:0 of config register encode alert output status
+    alert_output = bool(conf & 0x0008)
+    return {
+        "alert_output": alert_output,
+        "config_register": conf
+    }
 
-def set_sampling_interval(ms):
-    global _sampling_interval
-    with _lock:
-        _sampling_interval = int(ms)
+def write_config(bus, addr, config):
+    # Write 16-bit config
+    val = ((config & 0xFF) << 8) | ((config >> 8) & 0xFF)
+    bus.write_word_data(addr, REG_CONFIG, val)
 
-def get_threshold(reg):
-    data = bus.read_i2c_block_data(I2C_ADDRESS, reg, 2)
-    t_upper = data[0]
-    t_lower = data[1]
-    temp = ((t_upper & 0x1F) << 8) | t_lower
-    if t_upper & 0x10:  # sign bit
-        temp -= 8192
-    temperature = temp * 0.0625
-    return round(temperature, 4)
+def set_alert_config(bus, addr, alert_cfg):
+    # Set config register
+    write_config(bus, addr, alert_cfg)
 
-def set_threshold(reg, value):
-    # value: float in Celsius
-    temp_raw = int(value / 0.0625)
-    if temp_raw < 0:
-        temp_raw += 8192
-    t_upper = (temp_raw >> 8) & 0x1F
-    t_lower = temp_raw & 0xFF
-    bus.write_i2c_block_data(I2C_ADDRESS, reg, [t_upper, t_lower])
-
-def set_alert_config(payload):
-    # Accepts: {"alert_mode": 0/1, "alert_polarity": 0/1, "alert_select": 0/1, "alert_enable": 0/1, "upper": float, "lower": float, "critical": float}
-    config = bus.read_word_data(I2C_ADDRESS, REG_CONFIG)
-    config = ((config << 8) & 0xFF00) | ((config >> 8) & 0x00FF)
-    for k, bit in ALERT_CONFIG_BITS.items():
-        if k in payload:
-            if payload[k]:
-                config |= bit
-            else:
-                config &= ~bit
-    # Write config
-    config_out = ((config << 8) & 0xFF00) | ((config >> 8) & 0x00FF)
-    bus.write_word_data(I2C_ADDRESS, REG_CONFIG, config_out)
-    # Set thresholds if provided
-    if "upper" in payload:
-        set_threshold(REG_ALERT_UPPER, float(payload["upper"]))
-    if "lower" in payload:
-        set_threshold(REG_ALERT_LOWER, float(payload["lower"]))
-    if "critical" in payload:
-        set_threshold(REG_ALERT_CRIT, float(payload["critical"]))
+def set_sampling_interval(interval_ms):
+    global sampling_interval_ms
+    sampling_interval_ms = max(100, int(interval_ms))
 
 def set_i2c_address(new_addr):
-    # This device does not support software I2C address change; typically hardware pin-based.
-    # For this code, simulate by updating global and env.
-    global I2C_ADDRESS
-    I2C_ADDRESS = int(new_addr, 16) if isinstance(new_addr, str) else int(new_addr)
-    os.environ['I2C_ADDRESS'] = hex(I2C_ADDRESS)
+    global current_i2c_address
+    current_i2c_address = new_addr
 
-# Background thread for temperature sampling
-def temp_sampling_worker():
-    global _last_temp_reading, _last_temp_timestamp
+def log_temperature_reading(temp):
+    with temp_log_lock:
+        ts = int(time.time() * 1000)
+        temp_log.append({"timestamp": ts, "temp": temp})
+        if len(temp_log) > MAX_LOG_LENGTH:
+            temp_log.pop(0)
+
+def temp_sampling_loop():
+    bus = smbus2.SMBus(I2C_BUS_ID)
     while True:
-        with _lock:
-            interval = _sampling_interval
-        temp = read_temperature()
-        now = int(time.time() * 1000)
-        with _lock:
-            _last_temp_reading = temp
-            _last_temp_timestamp = now
-        time.sleep(interval / 1000.0)
-
-threading.Thread(target=temp_sampling_worker, daemon=True).start()
+        try:
+            temp = read_temperature(bus, current_i2c_address)
+            log_temperature_reading(temp)
+        except Exception:
+            pass
+        time.sleep(sampling_interval_ms / 1000.0)
 
 @app.route('/temp', methods=['GET'])
-def api_get_temperature():
-    with _lock:
-        temp = _last_temp_reading
-        ts = _last_temp_timestamp
-    if temp is None:
-        return jsonify({"error": "Unable to read temperature"}), 500
-    # Pagination for logs not implemented, only current value
-    return jsonify({"temperature_C": temp, "timestamp_ms": ts})
+def get_temp():
+    with temp_log_lock:
+        if not temp_log:
+            try:
+                with smbus2.SMBus(I2C_BUS_ID) as bus:
+                    temp = read_temperature(bus, current_i2c_address)
+            except Exception as e:
+                return jsonify({"error": str(e)}), 500
+            log_temperature_reading(temp)
+            resp = {"temp": temp, "unit": "C"}
+        else:
+            resp = {"temp": temp_log[-1]['temp'], "unit": "C"}
+        # Support pagination
+        start = int(request.args.get('start', '0'))
+        limit = int(request.args.get('limit', '1'))
+        if request.args.get('log') == '1' or limit > 1:
+            resp['log'] = temp_log[start:start+limit]
+    return jsonify(resp)
 
 @app.route('/alert', methods=['GET'])
-def api_get_alert():
-    status = read_alert_status()
+def get_alert():
+    try:
+        with smbus2.SMBus(I2C_BUS_ID) as bus:
+            status = read_alert_status(bus, current_i2c_address)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
     return jsonify(status)
 
-@app.route('/interval', methods=['PUT'])
-def api_set_interval():
-    data = request.get_json(force=True)
-    interval = data.get("interval_ms") or data.get("interval")
-    if not interval or int(interval) <= 0:
-        return jsonify({"error": "Invalid interval"}), 400
-    set_sampling_interval(int(interval))
-    return jsonify({"interval_ms": int(interval)})
-
 @app.route('/alertcfg', methods=['PUT'])
-def api_set_alertcfg():
-    payload = request.get_json(force=True)
+def put_alertcfg():
+    data = request.get_json(force=True)
+    if not isinstance(data, dict) or "config" not in data:
+        return jsonify({"error": "JSON body must have 'config' field (16-bit int)"}), 400
+    alert_cfg = int(data["config"])
     try:
-        set_alert_config(payload)
+        with smbus2.SMBus(I2C_BUS_ID) as bus:
+            set_alert_config(bus, current_i2c_address, alert_cfg)
+        global alert_config
+        alert_config = alert_cfg
     except Exception as e:
-        return jsonify({"error": "Failed to set alert config", "detail": str(e)}), 400
-    return jsonify({"status": "alert configuration updated"})
+        return jsonify({"error": str(e)}), 500
+    return jsonify({"result": "ok", "config": alert_cfg})
+
+@app.route('/interval', methods=['PUT'])
+def put_interval():
+    data = request.get_json(force=True)
+    if not isinstance(data, dict) or "interval" not in data:
+        return jsonify({"error": "JSON body must have 'interval' field (ms)"}), 400
+    try:
+        interval = int(data["interval"])
+        set_sampling_interval(interval)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+    return jsonify({"result": "ok", "interval": sampling_interval_ms})
 
 @app.route('/address', methods=['PUT'])
-def api_set_address():
+def put_address():
     data = request.get_json(force=True)
-    addr = data.get("address")
-    if not addr:
-        return jsonify({"error": "Missing address"}), 400
+    if not isinstance(data, dict) or "address" not in data:
+        return jsonify({"error": "JSON body must have 'address' field (hex str or int)"}), 400
+    addr = data["address"]
     try:
-        set_i2c_address(addr)
+        if isinstance(addr, str):
+            if addr.lower().startswith('0x'):
+                new_addr = int(addr, 16)
+            else:
+                new_addr = int(addr)
+        else:
+            new_addr = int(addr)
+        set_i2c_address(new_addr)
     except Exception as e:
-        return jsonify({"error": "Invalid address", "detail": str(e)}), 400
-    return jsonify({"i2c_address": hex(I2C_ADDRESS)})
+        return jsonify({"error": str(e)}), 400
+    return jsonify({"result": "ok", "address": hex(current_i2c_address)})
+
+@app.route('/')
+def health():
+    return jsonify({"status": "ok", "device": "MCP9808", "address": hex(current_i2c_address)})
+
+def start_sampler():
+    t = threading.Thread(target=temp_sampling_loop, daemon=True)
+    t.start()
 
 if __name__ == '__main__':
-    app.run(host=SERVER_HOST, port=SERVER_PORT, threaded=True)
+    start_sampler()
+    app.run(host=HTTP_HOST, port=HTTP_PORT)
